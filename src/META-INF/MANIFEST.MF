@@ -1,0 +1,11 @@
+Manifest-Version: 1.1
+Ant-Version: Apache Ant 1.7.0
+Created-By: 381 by line: @1652ffffd    
+Main-Class: com.lineage.Server
+X-COMMENT: Main-Class will be added automatically by build
+Specification-Vendor: lineage_381
+Specification-Title: LINE: @1652ffffd   
+Class-Path: jar/commons-logging-1.1.1.jar jar/log4j-1.2.16.jar jar/c3p
+ 0-0.9.1.2.jar jar/mysql-connector-java-5.1.20-bin.jar jar/javolution-
+ 5.5.1.jar
+

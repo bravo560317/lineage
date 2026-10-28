@@ -1,0 +1,124 @@
+package com.lineage.data.item_etcitem.reel;
+
+import com.lineage.data.cmd.EnchantExecutor;
+import com.lineage.server.model.L1ItemUpdata;
+import java.util.Random;
+import com.lineage.data.cmd.EnchantArmor;
+import com.lineage.server.serverpackets.S_ServerMessage;
+import com.lineage.server.model.Instance.L1ItemInstance;
+import com.lineage.server.model.Instance.L1PcInstance;
+import com.lineage.data.executor.ItemExecutor;
+
+public class AncientsMagicScroll extends ItemExecutor
+{
+    private AncientsMagicScroll() {
+    }
+    
+    public static ItemExecutor get() {
+        return new AncientsMagicScroll();
+    }
+    
+    @Override
+    public void execute(int[] data, L1PcInstance pc, L1ItemInstance item) {
+        int targObjId = data[0];
+        L1ItemInstance tgItem = pc.getInventory().getItem(targObjId);
+        if (tgItem == null) {
+            return;
+        }
+        else if (tgItem.isEquipped()) {
+            pc.sendPackets(new S_ServerMessage("(預防誤點機制啟動)裝備中無法強化"));
+            return;
+        }
+        else {
+            int safe_enchant = tgItem.getItem().get_safeenchant();
+            boolean isErr = false;
+            int use_type = tgItem.getItem().getUseType();
+            switch (use_type) {
+                case 2:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 25:
+                case 47: {
+                    if (safe_enchant < 0) {
+                        isErr = true;
+                        break;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                default: {
+                    isErr = true;
+                    break;
+                }
+            }
+            int armorId = tgItem.getItem().getItemId();
+            if (armorId >= 401004 && armorId <= 401007) {
+                isErr = true;
+            }
+            if (armorId >= 120444 && armorId <= 120448) {
+                isErr = true;
+            }
+            if (tgItem.getBless() >= 128) {
+                isErr = true;
+            }
+            if (isErr) {
+                pc.sendPackets(new S_ServerMessage(79));
+                return;
+            }
+            else {
+                int enchant_level = tgItem.getEnchantLevel();
+                EnchantExecutor enchantExecutor = new EnchantArmor();
+                int randomELevel = enchantExecutor.randomELevel(tgItem, item.getBless());
+                pc.getInventory().removeItem(item, 1L);
+                boolean isEnchant = true;
+                if (enchant_level < -6) {
+                    isEnchant = false;
+                }
+                else if (enchant_level < safe_enchant) {
+                    isEnchant = true;
+                }
+                else {
+                    Random random = new Random();
+                    int rnd = random.nextInt(100) + 1;
+                    int enchant_level_tmp;
+                    if (safe_enchant == 0) {
+                        enchant_level_tmp = enchant_level + 2;
+                    }
+                    else {
+                        enchant_level_tmp = enchant_level;
+                    }
+                    int enchant_chance_armor;
+                    if (enchant_level >= 9) {
+                        enchant_chance_armor = (int)L1ItemUpdata.enchant_armor_up9((double)enchant_level_tmp);
+                    }
+                    else {
+                        enchant_chance_armor = (int)L1ItemUpdata.enchant_armor_dn9((double)enchant_level_tmp);
+                    }
+                    if (rnd < enchant_chance_armor) {
+                        isEnchant = true;
+                    }
+                    else if (enchant_level >= 9 && rnd < enchant_chance_armor * 2) {
+                        randomELevel = 0;
+                    }
+                    else {
+                        isEnchant = false;
+                    }
+                }
+                if (randomELevel <= 0 && enchant_level > -6) {
+                    isEnchant = true;
+                }
+                if (isEnchant) {
+                    enchantExecutor.successEnchant(pc, tgItem, randomELevel);
+                }
+                else {
+                    enchantExecutor.failureEnchant(pc, tgItem);
+                }
+                return;
+            }
+        }
+    }
+}
