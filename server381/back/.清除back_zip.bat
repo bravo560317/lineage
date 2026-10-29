@@ -1,1 +1,0 @@
-del /F /S *.ZIP
